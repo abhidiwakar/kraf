@@ -20,3 +20,18 @@ def test_package_name_cannot_start_with_digit():
 def test_package_name_rejects_empty_input():
     with pytest.raises(InvalidProjectNameError, match="Project name is required"):
         normalize_package_name("   ")
+
+
+def test_project_slug_rejects_punctuation_only_input():
+    with pytest.raises(InvalidProjectNameError, match="letters or numbers"):
+        normalize_project_slug("!!!")
+
+
+def test_package_name_rejects_punctuation_only_input():
+    with pytest.raises(InvalidProjectNameError, match="valid Python package"):
+        normalize_package_name("!!!")
+
+
+def test_package_name_rejects_python_keyword():
+    with pytest.raises(InvalidProjectNameError, match="valid Python package"):
+        normalize_package_name("class")

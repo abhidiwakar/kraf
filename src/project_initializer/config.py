@@ -3,6 +3,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
+from project_initializer.errors import InvalidProjectNameError
 from project_initializer.name_utils import normalize_package_name, normalize_project_slug
 
 
@@ -38,7 +39,13 @@ class ProjectConfig:
 
 
 def normalize_answers(raw_answers: dict[str, Any], base_dir: Path | None = None) -> ProjectConfig:
-    project_name = str(raw_answers["project_name"]).strip()
+    raw_project_name = raw_answers.get("project_name")
+    if raw_project_name is None:
+        raise InvalidProjectNameError("Project name is required.")
+    if not isinstance(raw_project_name, str):
+        raise InvalidProjectNameError("Project name must be text.")
+
+    project_name = raw_project_name.strip()
     project_type = ProjectType(str(raw_answers["project_type"]))
     database = Database(str(raw_answers["database"]))
     package_name = normalize_package_name(project_name)

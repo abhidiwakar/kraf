@@ -1,4 +1,7 @@
+import pytest
+
 from project_initializer.config import Database, ProjectType, ToolingOptions, normalize_answers
+from project_initializer.errors import InvalidProjectNameError
 
 
 def test_normalize_django_drf_answers_selects_django_stack():
@@ -39,3 +42,66 @@ def test_fastapi_without_sqlalchemy_disables_alembic():
 
     assert config.use_sqlalchemy is False
     assert config.use_alembic is False
+
+
+def test_null_project_name_is_rejected():
+    with pytest.raises(InvalidProjectNameError, match="Project name is required"):
+        normalize_answers(
+            {
+                "project_name": None,
+                "project_type": "fastapi",
+                "database": "sqlite",
+            }
+        )
+
+
+def test_missing_project_name_is_rejected():
+    with pytest.raises(InvalidProjectNameError, match="Project name is required"):
+        normalize_answers(
+            {
+                "project_type": "fastapi",
+                "database": "sqlite",
+            }
+        )
+
+
+def test_non_string_project_name_is_rejected():
+    with pytest.raises(InvalidProjectNameError, match="Project name must be text"):
+        normalize_answers(
+            {
+                "project_name": 123,
+                "project_type": "fastapi",
+                "database": "sqlite",
+            }
+        )
+
+
+@pytest.mark.parametrize("project_type", ["django", "django_drf"])
+def test_django_stacks_disable_sqlalchemy_and_alembic(project_type):
+    config = normalize_answers(
+        {
+            "project_name": "Customer API",
+            "project_type": project_type,
+            "database": "postgresql",
+            "use_sqlalchemy": True,
+            "use_alembic": True,
+        }
+    )
+
+    assert config.use_sqlalchemy is False
+    assert config.use_alembic is False
+
+
+def test_fastapi_with_sqlalchemy_preserves_alembic():
+    config = normalize_answers(
+        {
+            "project_name": "Inventory Service",
+            "project_type": "fastapi",
+            "database": "postgresql",
+            "use_sqlalchemy": True,
+            "use_alembic": True,
+        }
+    )
+
+    assert config.use_sqlalchemy is True
+    assert config.use_alembic is True
