@@ -4,6 +4,8 @@ dependencies:
 files:
   - source: manage.py.j2
     destination: manage.py
+  - source: project/__init__.py.j2
+    destination: "{{ project.package_name }}/__init__.py"
   - source: project/settings.py.j2
     destination: "{{ project.package_name }}/settings.py"
   - source: project/urls.py.j2

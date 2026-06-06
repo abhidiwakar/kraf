@@ -123,3 +123,57 @@ def test_render_builtin_fastapi_sqlalchemy_alembic_project(tmp_path: Path):
     assert "alembic upgrade head" in (config.target_dir / "Makefile").read_text(
         encoding="utf-8"
     )
+
+
+def test_render_builtin_django_drf_project(tmp_path: Path):
+    config = ProjectConfig(
+        project_name="Customer API",
+        project_slug="customer-api",
+        package_name="customer_api",
+        target_dir=tmp_path / "customer-api",
+        project_type=ProjectType.DJANGO_DRF,
+        database=Database.POSTGRESQL,
+        tooling=ToolingOptions(use_docker=False, use_pytest=True, use_ruff=True),
+        use_sqlalchemy=False,
+        use_alembic=False,
+    )
+    pack_dirs = {pack_dir.name: pack_dir for pack_dir in builtin_pack_dirs()}
+    packs = resolve_packs(config)
+
+    render_project(config, [(pack, pack_dirs[pack.name]) for pack in packs])
+
+    assert (config.target_dir / "manage.py").exists()
+    assert (config.target_dir / "customer_api" / "__init__.py").exists()
+    assert (config.target_dir / "customer_api" / "settings.py").exists()
+    assert (config.target_dir / "api" / "__init__.py").exists()
+    assert (config.target_dir / "api" / "views.py").exists()
+    assert "djangorestframework" in (config.target_dir / "requirements.txt").read_text(
+        encoding="utf-8"
+    )
+    assert "python manage.py migrate" in (config.target_dir / "Makefile").read_text(
+        encoding="utf-8"
+    )
+
+
+def test_render_builtin_django_project_omits_drf_imports(tmp_path: Path):
+    config = ProjectConfig(
+        project_name="Blog Admin",
+        project_slug="blog-admin",
+        package_name="blog_admin",
+        target_dir=tmp_path / "blog-admin",
+        project_type=ProjectType.DJANGO,
+        database=Database.SQLITE,
+        tooling=ToolingOptions(use_docker=False, use_pytest=True, use_ruff=True),
+        use_sqlalchemy=False,
+        use_alembic=False,
+    )
+    pack_dirs = {pack_dir.name: pack_dir for pack_dir in builtin_pack_dirs()}
+    packs = resolve_packs(config)
+
+    render_project(config, [(pack, pack_dirs[pack.name]) for pack in packs])
+
+    settings = (config.target_dir / "blog_admin" / "settings.py").read_text(encoding="utf-8")
+    urls = (config.target_dir / "blog_admin" / "urls.py").read_text(encoding="utf-8")
+
+    assert "rest_framework" not in settings
+    assert "include" not in urls

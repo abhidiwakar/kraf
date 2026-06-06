@@ -1,0 +1,13 @@
+from django.contrib import admin
+{% if project.project_type.value == "django_drf" %}
+from django.urls import include, path
+{% else %}
+from django.urls import path
+{% endif %}
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+{% if project.project_type.value == "django_drf" %}
+    path("api/", include("api.urls")),
+{% endif %}
+]
