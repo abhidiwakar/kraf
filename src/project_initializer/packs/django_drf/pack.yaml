@@ -1,0 +1,12 @@
+name: django_drf
+dependencies:
+  - djangorestframework
+files:
+  - source: api/views.py.j2
+    destination: api/views.py
+  - source: api/urls.py.j2
+    destination: api/urls.py
+requires:
+  - django
+conflicts:
+  - fastapi

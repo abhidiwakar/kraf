@@ -1,0 +1,5 @@
+name: tooling_pytest
+dev_dependencies:
+  - pytest
+make_targets:
+  test: "pytest"

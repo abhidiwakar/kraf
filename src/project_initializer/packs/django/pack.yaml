@@ -1,0 +1,20 @@
+name: django
+dependencies:
+  - django
+files:
+  - source: manage.py.j2
+    destination: manage.py
+  - source: project/settings.py.j2
+    destination: "{{ project.package_name }}/settings.py"
+  - source: project/urls.py.j2
+    destination: "{{ project.package_name }}/urls.py"
+  - source: project/wsgi.py.j2
+    destination: "{{ project.package_name }}/wsgi.py"
+  - source: project/asgi.py.j2
+    destination: "{{ project.package_name }}/asgi.py"
+make_targets:
+  run: "python manage.py runserver"
+  migrate: "python manage.py migrate"
+  makemigrations: "python manage.py makemigrations"
+conflicts:
+  - fastapi

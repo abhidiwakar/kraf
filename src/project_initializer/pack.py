@@ -175,16 +175,7 @@ def _pack_names_for_config(config: ProjectConfig) -> list[str]:
 
 
 def _default_pack_manifest_map() -> dict[str, PackManifest]:
-    return {
-        "common": PackManifest(name="common"),
-        "django": PackManifest(name="django", conflicts=("fastapi",)),
-        "django_drf": PackManifest(name="django_drf", requires=("django",), conflicts=("fastapi",)),
-        "fastapi": PackManifest(name="fastapi", conflicts=("django", "django_drf")),
-        "database_sqlite": PackManifest(name="database_sqlite"),
-        "database_postgres": PackManifest(name="database_postgres"),
-        "orm_sqlalchemy": PackManifest(name="orm_sqlalchemy", requires=("fastapi",)),
-        "migrations_alembic": PackManifest(name="migrations_alembic", requires=("orm_sqlalchemy",)),
-        "tooling_pytest": PackManifest(name="tooling_pytest"),
-        "tooling_ruff": PackManifest(name="tooling_ruff"),
-        "docker": PackManifest(name="docker"),
-    }
+    from project_initializer.resources import builtin_pack_dirs
+
+    manifests = [load_pack(pack_dir) for pack_dir in builtin_pack_dirs()]
+    return {manifest.name: manifest for manifest in manifests}

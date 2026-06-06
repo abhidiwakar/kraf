@@ -1,0 +1,13 @@
+name: migrations_alembic
+dependencies:
+  - alembic
+files:
+  - source: alembic.ini.j2
+    destination: alembic.ini
+  - source: alembic/env.py.j2
+    destination: alembic/env.py
+make_targets:
+  migrate: "alembic upgrade head"
+  revision: "alembic revision --autogenerate -m \"change\""
+requires:
+  - orm_sqlalchemy

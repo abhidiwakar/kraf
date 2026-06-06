@@ -1,0 +1,14 @@
+name: fastapi
+dependencies:
+  - fastapi
+  - uvicorn[standard]
+files:
+  - source: app/main.py.j2
+    destination: app/main.py
+  - source: app/api/health.py.j2
+    destination: app/api/health.py
+make_targets:
+  run: "uvicorn app.main:app --reload"
+conflicts:
+  - django
+  - django_drf

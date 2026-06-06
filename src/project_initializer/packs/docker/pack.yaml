@@ -1,0 +1,9 @@
+name: docker
+files:
+  - source: Dockerfile.j2
+    destination: Dockerfile
+  - source: docker-compose.yml.j2
+    destination: docker-compose.yml
+make_targets:
+  docker-up: "docker compose up --build"
+  docker-down: "docker compose down"

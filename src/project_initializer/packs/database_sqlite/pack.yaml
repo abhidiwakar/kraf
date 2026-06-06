@@ -1,0 +1,3 @@
+name: database_sqlite
+env:
+  DATABASE_URL: sqlite:///db.sqlite3

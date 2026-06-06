@@ -81,3 +81,13 @@ def test_validate_pack_requires_selected_pack():
             },
             explicit_names=["common"],
         )
+
+
+def test_default_resolver_uses_builtin_pack_manifests():
+    packs = resolve_packs(_config(ProjectType.FASTAPI, sqlalchemy=True, alembic=True))
+
+    dependencies = {dependency for pack in packs for dependency in pack.dependencies}
+
+    assert "fastapi" in dependencies
+    assert "sqlalchemy" in dependencies
+    assert "alembic" in dependencies

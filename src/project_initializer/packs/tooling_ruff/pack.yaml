@@ -1,0 +1,6 @@
+name: tooling_ruff
+dev_dependencies:
+  - ruff
+make_targets:
+  lint: "ruff check ."
+  format: "ruff format ."

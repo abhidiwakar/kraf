@@ -1,0 +1,10 @@
+name: orm_sqlalchemy
+dependencies:
+  - sqlalchemy
+files:
+  - source: app/db/session.py.j2
+    destination: app/db/session.py
+  - source: app/db/models.py.j2
+    destination: app/db/models.py
+requires:
+  - fastapi
