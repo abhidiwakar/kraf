@@ -1,0 +1,70 @@
+from dataclasses import dataclass
+from enum import StrEnum
+from pathlib import Path
+from typing import Any
+
+from project_initializer.name_utils import normalize_package_name, normalize_project_slug
+
+
+class ProjectType(StrEnum):
+    DJANGO = "django"
+    DJANGO_DRF = "django_drf"
+    FASTAPI = "fastapi"
+
+
+class Database(StrEnum):
+    SQLITE = "sqlite"
+    POSTGRESQL = "postgresql"
+
+
+@dataclass(frozen=True)
+class ToolingOptions:
+    use_docker: bool
+    use_pytest: bool
+    use_ruff: bool
+
+
+@dataclass(frozen=True)
+class ProjectConfig:
+    project_name: str
+    project_slug: str
+    package_name: str
+    target_dir: Path
+    project_type: ProjectType
+    database: Database
+    tooling: ToolingOptions
+    use_sqlalchemy: bool
+    use_alembic: bool
+
+
+def normalize_answers(raw_answers: dict[str, Any], base_dir: Path | None = None) -> ProjectConfig:
+    project_name = str(raw_answers["project_name"]).strip()
+    project_type = ProjectType(str(raw_answers["project_type"]))
+    database = Database(str(raw_answers["database"]))
+    package_name = normalize_package_name(project_name)
+    project_slug = normalize_project_slug(project_name)
+    target_root = base_dir or Path.cwd()
+
+    use_sqlalchemy = bool(raw_answers.get("use_sqlalchemy", False))
+    use_alembic = bool(raw_answers.get("use_alembic", False))
+    if project_type is not ProjectType.FASTAPI:
+        use_sqlalchemy = False
+        use_alembic = False
+    if not use_sqlalchemy:
+        use_alembic = False
+
+    return ProjectConfig(
+        project_name=project_name,
+        project_slug=project_slug,
+        package_name=package_name,
+        target_dir=target_root / project_slug,
+        project_type=project_type,
+        database=database,
+        tooling=ToolingOptions(
+            use_docker=bool(raw_answers.get("use_docker", False)),
+            use_pytest=bool(raw_answers.get("use_pytest", True)),
+            use_ruff=bool(raw_answers.get("use_ruff", True)),
+        ),
+        use_sqlalchemy=use_sqlalchemy,
+        use_alembic=use_alembic,
+    )
