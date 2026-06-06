@@ -4,8 +4,9 @@ import pytest
 
 from project_initializer.config import Database, ProjectConfig, ProjectType, ToolingOptions
 from project_initializer.errors import RenderError
-from project_initializer.pack import PackManifest
+from project_initializer.pack import PackManifest, resolve_packs
 from project_initializer.renderer import RenderedProject, render_project
+from project_initializer.resources import builtin_pack_dirs
 
 
 def _config(tmp_path: Path) -> ProjectConfig:
@@ -93,3 +94,32 @@ def test_render_project_rejects_empty_rendered_destination(tmp_path: Path):
 
     with pytest.raises(RenderError, match="unsafe template destination"):
         render_project(_config(tmp_path), [(pack, pack_dir)])
+
+
+def test_render_builtin_fastapi_sqlalchemy_alembic_project(tmp_path: Path):
+    config = ProjectConfig(
+        project_name="Inventory Service",
+        project_slug="inventory-service",
+        package_name="inventory_service",
+        target_dir=tmp_path / "inventory-service",
+        project_type=ProjectType.FASTAPI,
+        database=Database.POSTGRESQL,
+        tooling=ToolingOptions(use_docker=True, use_pytest=True, use_ruff=True),
+        use_sqlalchemy=True,
+        use_alembic=True,
+    )
+    pack_dirs = {pack_dir.name: pack_dir for pack_dir in builtin_pack_dirs()}
+    packs = resolve_packs(config)
+
+    render_project(config, [(pack, pack_dirs[pack.name]) for pack in packs])
+
+    assert (config.target_dir / "app" / "main.py").exists()
+    assert (config.target_dir / "app" / "db" / "session.py").exists()
+    assert (config.target_dir / "alembic.ini").exists()
+    assert (config.target_dir / "Dockerfile").exists()
+    assert "apt-get install" in (config.target_dir / "Dockerfile").read_text(encoding="utf-8")
+    assert "make" in (config.target_dir / "Dockerfile").read_text(encoding="utf-8")
+    assert "make run" in (config.target_dir / "README.md").read_text(encoding="utf-8")
+    assert "alembic upgrade head" in (config.target_dir / "Makefile").read_text(
+        encoding="utf-8"
+    )
