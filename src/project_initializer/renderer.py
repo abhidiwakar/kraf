@@ -4,7 +4,7 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, TemplateError
 
-from project_initializer.config import ProjectConfig
+from project_initializer.config import Database, ProjectConfig, ProjectType
 from project_initializer.errors import RenderError
 from project_initializer.pack import PackManifest
 
@@ -28,7 +28,7 @@ def render_project(config: ProjectConfig, packs: list[PackWithPath]) -> Rendered
 
     files_written += _write_requirements(config.target_dir, packs)
     files_written += _write_makefile(config.target_dir, packs)
-    files_written += _write_env_example(config.target_dir, packs)
+    files_written += _write_env_example(config, packs)
 
     return RenderedProject(path=config.target_dir, files_written=files_written)
 
@@ -87,25 +87,62 @@ def _write_requirements(target_dir: Path, packs: list[PackWithPath]) -> int:
 
 def _write_makefile(target_dir: Path, packs: list[PackWithPath]) -> int:
     targets: dict[str, str] = {
-        "venv": "python -m venv .venv",
-        "install": (
-            ". .venv/bin/activate && pip install -r requirements.txt -r requirements-dev.txt"
-        ),
+        "install": "$(VENV_PYTHON) -m pip install -r requirements.txt -r requirements-dev.txt",
     }
     for pack, _path in packs:
         targets.update(pack.make_targets)
 
-    content = "\n".join(f"{name}:\n\t{command}\n" for name, command in targets.items())
+    phony_targets = " ".join(["venv", *targets])
+    target_blocks = [
+        "venv: .venv/pyvenv.cfg\n",
+        ".venv/pyvenv.cfg:\n\t$(PYTHON) -m venv .venv\n",
+    ]
+    target_blocks.extend(_make_target_block(name, command) for name, command in targets.items())
+    content = "\n".join(
+        [
+            "ifeq ($(OS),Windows_NT)",
+            "PYTHON ?= python",
+            "VENV_PYTHON := .venv/Scripts/python.exe",
+            "else",
+            "PYTHON ?= python3",
+            "VENV_PYTHON := .venv/bin/python",
+            "endif",
+            "",
+            f".PHONY: {phony_targets}",
+            "",
+            *target_blocks,
+        ]
+    )
     (target_dir / "Makefile").write_text(content, encoding="utf-8")
     return 1
 
 
-def _write_env_example(target_dir: Path, packs: list[PackWithPath]) -> int:
+def _make_target_block(name: str, command: str) -> str:
+    dependency = "" if name.startswith("docker-") else " .venv/pyvenv.cfg"
+    return f"{name}:{dependency}\n\t{command}\n"
+
+
+def _write_env_example(config: ProjectConfig, packs: list[PackWithPath]) -> int:
     env_values: dict[str, str] = {}
     for pack, _path in packs:
         env_values.update(pack.env)
 
-    (target_dir / ".env.example").write_text(
+    if config.database is Database.POSTGRESQL and config.project_type in {
+        ProjectType.DJANGO,
+        ProjectType.DJANGO_DRF,
+    }:
+        env_values.pop("DATABASE_URL", None)
+        env_values.update(
+            {
+                "POSTGRES_DB": "app",
+                "POSTGRES_USER": "postgres",
+                "POSTGRES_PASSWORD": "postgres",
+                "POSTGRES_HOST": "localhost",
+                "POSTGRES_PORT": "5432",
+            }
+        )
+
+    (config.target_dir / ".env.example").write_text(
         _lines(f"{key}={value}" for key, value in sorted(env_values.items())),
         encoding="utf-8",
     )

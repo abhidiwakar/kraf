@@ -117,12 +117,24 @@ def test_render_builtin_fastapi_sqlalchemy_alembic_project(tmp_path: Path):
     assert (config.target_dir / "app" / "db" / "session.py").exists()
     assert (config.target_dir / "alembic.ini").exists()
     assert (config.target_dir / "Dockerfile").exists()
+    compose = (config.target_dir / "docker-compose.yml").read_text(encoding="utf-8")
+    env = (config.target_dir / ".env.example").read_text(encoding="utf-8")
+    makefile = (config.target_dir / "Makefile").read_text(encoding="utf-8")
     assert "apt-get install" in (config.target_dir / "Dockerfile").read_text(encoding="utf-8")
     assert "make" in (config.target_dir / "Dockerfile").read_text(encoding="utf-8")
+    assert "db:" in compose
+    assert "image: postgres:16-alpine" in compose
+    assert "depends_on:" in compose
+    assert "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app" in env
+    assert "DATABASE_URL: postgresql://postgres:postgres@db:5432/app" in compose
     assert "make run" in (config.target_dir / "README.md").read_text(encoding="utf-8")
-    assert "alembic upgrade head" in (config.target_dir / "Makefile").read_text(
-        encoding="utf-8"
-    )
+    assert "ifeq ($(OS),Windows_NT)" in makefile
+    assert "PYTHON ?= python3" in makefile
+    assert "PYTHON ?= python" in makefile
+    assert "install: .venv/pyvenv.cfg" in makefile
+    assert "docker-up:\n\tdocker compose up --build" in makefile
+    assert "$(VENV_PYTHON) -m pip install" in makefile
+    assert "$(VENV_PYTHON) -m alembic upgrade head" in makefile
 
 
 def test_render_builtin_django_drf_project(tmp_path: Path):
@@ -150,9 +162,15 @@ def test_render_builtin_django_drf_project(tmp_path: Path):
     assert "djangorestframework" in (config.target_dir / "requirements.txt").read_text(
         encoding="utf-8"
     )
-    assert "python manage.py migrate" in (config.target_dir / "Makefile").read_text(
-        encoding="utf-8"
-    )
+    env = (config.target_dir / ".env.example").read_text(encoding="utf-8")
+    makefile = (config.target_dir / "Makefile").read_text(encoding="utf-8")
+    assert "DATABASE_URL=" not in env
+    assert "POSTGRES_DB=app" in env
+    assert "POSTGRES_USER=postgres" in env
+    assert "POSTGRES_PASSWORD=postgres" in env
+    assert "POSTGRES_HOST=localhost" in env
+    assert "POSTGRES_PORT=5432" in env
+    assert "$(VENV_PYTHON) manage.py migrate" in makefile
 
 
 def test_render_builtin_django_project_omits_drf_imports(tmp_path: Path):

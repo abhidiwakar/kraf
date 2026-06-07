@@ -2085,7 +2085,7 @@ Interactive Python web project initializer for Django, Django REST Framework, an
 ## Install
 
 ```bash
-pipx install git+https://github.com/abhidiwakar/kraf.git
+pipx install kraf
 ```
 
 ## Usage

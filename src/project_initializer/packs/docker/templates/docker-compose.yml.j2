@@ -3,5 +3,31 @@ services:
     build: .
     env_file:
       - .env.example
+{% if project.database.value == "postgresql" %}
+    depends_on:
+      - db
+    environment:
+{% if project.project_type.value == "fastapi" %}
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/app
+{% else %}
+      POSTGRES_HOST: db
+{% endif %}
+{% endif %}
     ports:
       - "8000:8000"
+{% if project.database.value == "postgresql" %}
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
+{% endif %}

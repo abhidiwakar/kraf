@@ -15,8 +15,8 @@ files:
   - source: project/asgi.py.j2
     destination: "{{ project.package_name }}/asgi.py"
 make_targets:
-  run: "python manage.py runserver"
-  migrate: "python manage.py migrate"
-  makemigrations: "python manage.py makemigrations"
+  run: "$(VENV_PYTHON) manage.py runserver"
+  migrate: "$(VENV_PYTHON) manage.py migrate"
+  makemigrations: "$(VENV_PYTHON) manage.py makemigrations"
 conflicts:
   - fastapi

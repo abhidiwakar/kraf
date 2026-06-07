@@ -2,4 +2,4 @@ name: tooling_pytest
 dev_dependencies:
   - pytest
 make_targets:
-  test: "pytest"
+  test: "$(VENV_PYTHON) -m pytest"

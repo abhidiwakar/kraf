@@ -2,5 +2,5 @@ name: tooling_ruff
 dev_dependencies:
   - ruff
 make_targets:
-  lint: "ruff check ."
-  format: "ruff format ."
+  lint: "$(VENV_PYTHON) -m ruff check ."
+  format: "$(VENV_PYTHON) -m ruff format ."
