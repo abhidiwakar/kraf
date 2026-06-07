@@ -91,6 +91,9 @@ def _write_makefile(target_dir: Path, packs: list[PackWithPath]) -> int:
     }
     for pack, _path in packs:
         targets.update(pack.make_targets)
+    if _uses_no_database(packs):
+        for target in ("migrate", "makemigrations", "revision"):
+            targets.pop(target, None)
 
     phony_targets = " ".join(["venv", *targets])
     target_blocks = [
@@ -120,6 +123,11 @@ def _write_makefile(target_dir: Path, packs: list[PackWithPath]) -> int:
 def _make_target_block(name: str, command: str) -> str:
     dependency = "" if name.startswith("docker-") else " .venv/pyvenv.cfg"
     return f"{name}:{dependency}\n\t{command}\n"
+
+
+def _uses_no_database(packs: list[PackWithPath]) -> bool:
+    names = {pack.name for pack, _path in packs}
+    return "database_sqlite" not in names and "database_postgres" not in names
 
 
 def _write_env_example(config: ProjectConfig, packs: list[PackWithPath]) -> int:

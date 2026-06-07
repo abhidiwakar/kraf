@@ -105,3 +105,19 @@ def test_fastapi_with_sqlalchemy_preserves_alembic():
 
     assert config.use_sqlalchemy is True
     assert config.use_alembic is True
+
+
+def test_fastapi_no_database_disables_sqlalchemy_and_alembic():
+    config = normalize_answers(
+        {
+            "project_name": "Inventory Service",
+            "project_type": "fastapi",
+            "database": "none",
+            "use_sqlalchemy": True,
+            "use_alembic": True,
+        }
+    )
+
+    assert config.database is Database.NONE
+    assert config.use_sqlalchemy is False
+    assert config.use_alembic is False

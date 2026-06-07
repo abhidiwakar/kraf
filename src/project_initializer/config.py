@@ -14,6 +14,7 @@ class ProjectType(StrEnum):
 
 
 class Database(StrEnum):
+    NONE = "none"
     SQLITE = "sqlite"
     POSTGRESQL = "postgresql"
 
@@ -55,6 +56,9 @@ def normalize_answers(raw_answers: dict[str, Any], base_dir: Path | None = None)
     use_sqlalchemy = bool(raw_answers.get("use_sqlalchemy", False))
     use_alembic = bool(raw_answers.get("use_alembic", False))
     if project_type is not ProjectType.FASTAPI:
+        use_sqlalchemy = False
+        use_alembic = False
+    if database is Database.NONE:
         use_sqlalchemy = False
         use_alembic = False
     if not use_sqlalchemy:

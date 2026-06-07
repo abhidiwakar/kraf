@@ -115,6 +115,7 @@ def test_render_builtin_fastapi_sqlalchemy_alembic_project(tmp_path: Path):
 
     assert (config.target_dir / "app" / "main.py").exists()
     assert (config.target_dir / "app" / "db" / "session.py").exists()
+    assert (config.target_dir / "app" / "db" / "base.py").exists()
     assert (config.target_dir / "alembic.ini").exists()
     assert (config.target_dir / "Dockerfile").exists()
     compose = (config.target_dir / "docker-compose.yml").read_text(encoding="utf-8")
@@ -135,6 +136,12 @@ def test_render_builtin_fastapi_sqlalchemy_alembic_project(tmp_path: Path):
     assert "docker-up:\n\tdocker compose up --build" in makefile
     assert "$(VENV_PYTHON) -m pip install" in makefile
     assert "$(VENV_PYTHON) -m alembic upgrade head" in makefile
+    base_model = (config.target_dir / "app" / "db" / "base.py").read_text(encoding="utf-8")
+    models = (config.target_dir / "app" / "db" / "models.py").read_text(encoding="utf-8")
+    assert "class BaseModel(Base):" in base_model
+    assert "deleted_at" in base_model
+    assert "is_deleted" not in base_model
+    assert "class Example(BaseModel):" in models
 
 
 def test_render_builtin_django_drf_project(tmp_path: Path):
@@ -157,6 +164,7 @@ def test_render_builtin_django_drf_project(tmp_path: Path):
     assert (config.target_dir / "manage.py").exists()
     assert (config.target_dir / "customer_api" / "__init__.py").exists()
     assert (config.target_dir / "customer_api" / "settings.py").exists()
+    assert (config.target_dir / "core" / "models.py").exists()
     assert (config.target_dir / "api" / "__init__.py").exists()
     assert (config.target_dir / "api" / "views.py").exists()
     assert "djangorestframework" in (config.target_dir / "requirements.txt").read_text(
@@ -171,6 +179,12 @@ def test_render_builtin_django_drf_project(tmp_path: Path):
     assert "POSTGRES_HOST=localhost" in env
     assert "POSTGRES_PORT=5432" in env
     assert "$(VENV_PYTHON) manage.py migrate" in makefile
+    base_model = (config.target_dir / "core" / "models.py").read_text(encoding="utf-8")
+    assert "class BaseModel(models.Model):" in base_model
+    assert "models.UUIDField" in base_model
+    assert "deleted_at" in base_model
+    assert "is_deleted" not in base_model
+    assert "abstract = True" in base_model
 
 
 def test_render_builtin_django_project_omits_drf_imports(tmp_path: Path):
@@ -194,6 +208,7 @@ def test_render_builtin_django_project_omits_drf_imports(tmp_path: Path):
     urls = (config.target_dir / "blog_admin" / "urls.py").read_text(encoding="utf-8")
 
     assert "rest_framework" not in settings
+    assert '"api"' not in settings
     assert "include" not in urls
 
 
@@ -217,5 +232,40 @@ def test_render_builtin_django_sqlite_project(tmp_path: Path):
     settings = (config.target_dir / "blog_admin" / "settings.py").read_text(encoding="utf-8")
 
     assert (config.target_dir / "manage.py").exists()
+    assert (config.target_dir / "core" / "models.py").exists()
     assert "django.db.backends.sqlite3" in settings
     assert "rest_framework" not in settings
+
+
+def test_render_builtin_django_project_without_database(tmp_path: Path):
+    config = ProjectConfig(
+        project_name="Blog Admin",
+        project_slug="blog-admin",
+        package_name="blog_admin",
+        target_dir=tmp_path / "blog-admin",
+        project_type=ProjectType.DJANGO,
+        database=Database.NONE,
+        tooling=ToolingOptions(use_docker=True, use_pytest=True, use_ruff=True),
+        use_sqlalchemy=False,
+        use_alembic=False,
+    )
+    pack_dirs = {pack_dir.name: pack_dir for pack_dir in builtin_pack_dirs()}
+    packs = resolve_packs(config)
+
+    render_project(config, [(pack, pack_dirs[pack.name]) for pack in packs])
+
+    settings = (config.target_dir / "blog_admin" / "settings.py").read_text(encoding="utf-8")
+    makefile = (config.target_dir / "Makefile").read_text(encoding="utf-8")
+    compose = (config.target_dir / "docker-compose.yml").read_text(encoding="utf-8")
+    env = (config.target_dir / ".env.example").read_text(encoding="utf-8")
+    readme = (config.target_dir / "README.md").read_text(encoding="utf-8")
+
+    assert "django.db.backends.dummy" in settings
+    assert '"core"' not in settings
+    assert not (config.target_dir / "core").exists()
+    assert "DATABASE_URL=" not in env
+    assert "POSTGRES_" not in env
+    assert "migrate:" not in makefile
+    assert "makemigrations:" not in makefile
+    assert "make migrate" not in readme
+    assert "db:" not in compose

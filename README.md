@@ -18,7 +18,7 @@ The CLI asks for:
 
 - Project name
 - Project type: Django, Django with DRF, or FastAPI
-- Database: SQLite or PostgreSQL
+- Database: no database, SQLite, or PostgreSQL
 - FastAPI ORM and migration choices
 - Tooling choices: pytest, Ruff, and Docker
 

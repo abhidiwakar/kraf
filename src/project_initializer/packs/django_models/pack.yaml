@@ -1,0 +1,10 @@
+name: django_models
+files:
+  - source: core/__init__.py.j2
+    destination: core/__init__.py
+  - source: core/models.py.j2
+    destination: core/models.py
+requires:
+  - django
+conflicts:
+  - fastapi

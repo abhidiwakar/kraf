@@ -18,7 +18,7 @@ The MVP supports these project types:
 
 The MVP supports these configurable features:
 
-- SQLite or PostgreSQL database setup
+- No database, SQLite, or PostgreSQL database setup
 - SQLAlchemy for FastAPI projects
 - Alembic migrations for FastAPI projects when SQLAlchemy is selected
 - Ruff formatting and linting
@@ -44,7 +44,7 @@ The CLI asks focused questions:
 
 1. Project name
 2. Project type: Django, FastAPI, or Django with DRF
-3. Database: SQLite or PostgreSQL
+3. Database: no database, SQLite, or PostgreSQL
 4. Stack-specific choices, such as SQLAlchemy and Alembic for FastAPI
 5. Tooling choices, such as Docker, pytest, and Ruff
 

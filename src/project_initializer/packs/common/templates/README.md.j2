@@ -17,9 +17,11 @@ make test
 make lint
 make format
 ```
+{% if project.database.value != "none" %}
 
 ## Database
 
 ```bash
 make migrate
 ```
+{% endif %}

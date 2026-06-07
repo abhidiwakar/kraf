@@ -2,6 +2,8 @@ name: orm_sqlalchemy
 dependencies:
   - sqlalchemy
 files:
+  - source: app/db/base.py.j2
+    destination: app/db/base.py
   - source: app/db/session.py.j2
     destination: app/db/session.py
   - source: app/db/models.py.j2

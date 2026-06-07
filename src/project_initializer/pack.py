@@ -160,9 +160,14 @@ def _pack_names_for_config(config: ProjectConfig) -> list[str]:
     elif config.database is Database.POSTGRESQL:
         names.append("database_postgres")
 
-    if config.use_sqlalchemy:
+    if config.project_type in {ProjectType.DJANGO, ProjectType.DJANGO_DRF} and (
+        config.database is not Database.NONE
+    ):
+        names.append("django_models")
+
+    if config.use_sqlalchemy and config.database is not Database.NONE:
         names.append("orm_sqlalchemy")
-    if config.use_alembic:
+    if config.use_alembic and config.database is not Database.NONE:
         names.append("migrations_alembic")
     if config.tooling.use_pytest:
         names.append("tooling_pytest")

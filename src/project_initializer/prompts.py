@@ -16,12 +16,13 @@ def collect_answers() -> dict[str, object]:
         {
             "1": ("SQLite", "sqlite"),
             "2": ("PostgreSQL", "postgresql"),
+            "3": ("No database", "none"),
         },
     )
 
     use_sqlalchemy = False
     use_alembic = False
-    if project_type == "fastapi":
+    if project_type == "fastapi" and database != "none":
         use_sqlalchemy = typer.confirm("Use SQLAlchemy ORM?", default=True)
         if use_sqlalchemy:
             use_alembic = typer.confirm("Use Alembic migrations?", default=True)

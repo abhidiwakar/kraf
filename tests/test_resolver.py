@@ -7,14 +7,20 @@ from project_initializer.errors import PackError
 from project_initializer.pack import PackManifest, resolve_packs
 
 
-def _config(project_type: ProjectType, *, sqlalchemy: bool = False, alembic: bool = False):
+def _config(
+    project_type: ProjectType,
+    *,
+    database: Database = Database.POSTGRESQL,
+    sqlalchemy: bool = False,
+    alembic: bool = False,
+):
     return ProjectConfig(
         project_name="Customer API",
         project_slug="customer-api",
         package_name="customer_api",
         target_dir=Path("customer-api"),
         project_type=project_type,
-        database=Database.POSTGRESQL,
+        database=database,
         tooling=ToolingOptions(use_docker=True, use_pytest=True, use_ruff=True),
         use_sqlalchemy=sqlalchemy,
         use_alembic=alembic,
@@ -44,6 +50,7 @@ def test_resolve_django_drf_packs():
         "django",
         "django_drf",
         "database_postgres",
+        "django_models",
         "tooling_pytest",
         "tooling_ruff",
         "docker",
@@ -91,3 +98,22 @@ def test_default_resolver_uses_builtin_pack_manifests():
     assert "fastapi" in dependencies
     assert "sqlalchemy" in dependencies
     assert "alembic" in dependencies
+
+
+def test_resolve_no_database_omits_database_and_orm_packs():
+    packs = resolve_packs(
+        _config(
+            ProjectType.FASTAPI,
+            database=Database.NONE,
+            sqlalchemy=True,
+            alembic=True,
+        )
+    )
+
+    assert [pack.name for pack in packs] == [
+        "common",
+        "fastapi",
+        "tooling_pytest",
+        "tooling_ruff",
+        "docker",
+    ]
