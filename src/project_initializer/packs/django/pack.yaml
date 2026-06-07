@@ -1,6 +1,11 @@
 name: django
 dependencies:
   - django
+  - python-dotenv
+env:
+  DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+  DJANGO_DEBUG: "true"
+  DJANGO_SECRET_KEY: change-me
 files:
   - source: manage.py.j2
     destination: manage.py

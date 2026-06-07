@@ -167,11 +167,20 @@ def test_render_builtin_django_drf_project(tmp_path: Path):
     assert (config.target_dir / "core" / "models.py").exists()
     assert (config.target_dir / "api" / "__init__.py").exists()
     assert (config.target_dir / "api" / "views.py").exists()
+    settings = (config.target_dir / "customer_api" / "settings.py").read_text(encoding="utf-8")
     assert "djangorestframework" in (config.target_dir / "requirements.txt").read_text(
+        encoding="utf-8"
+    )
+    assert "python-dotenv" in (config.target_dir / "requirements.txt").read_text(
         encoding="utf-8"
     )
     env = (config.target_dir / ".env.example").read_text(encoding="utf-8")
     makefile = (config.target_dir / "Makefile").read_text(encoding="utf-8")
+    assert "from dotenv import load_dotenv" in settings
+    assert 'load_dotenv(BASE_DIR / ".env")' in settings
+    assert "DJANGO_SECRET_KEY=change-me" in env
+    assert "DJANGO_DEBUG=true" in env
+    assert "DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1" in env
     assert "DATABASE_URL=" not in env
     assert "POSTGRES_DB=app" in env
     assert "POSTGRES_USER=postgres" in env
@@ -261,6 +270,9 @@ def test_render_builtin_django_project_without_database(tmp_path: Path):
     readme = (config.target_dir / "README.md").read_text(encoding="utf-8")
 
     assert "django.db.backends.dummy" in settings
+    assert "DJANGO_SECRET_KEY=change-me" in env
+    assert "DJANGO_DEBUG=true" in env
+    assert "DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1" in env
     assert '"core"' not in settings
     assert not (config.target_dir / "core").exists()
     assert "DATABASE_URL=" not in env
