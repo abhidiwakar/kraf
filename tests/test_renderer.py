@@ -138,6 +138,14 @@ def test_render_builtin_fastapi_sqlalchemy_alembic_project(tmp_path: Path):
     assert "docker-up:\n\tdocker compose up --build" in makefile
     assert "$(VENV_PYTHON) -m pip install" in makefile
     assert "$(VENV_PYTHON) -m alembic upgrade head" in makefile
+    alembic_revision_command = (
+        "$(VENV_PYTHON) -m alembic revision --autogenerate -m \"change\""
+    )
+    assert (
+        f"migrations: .venv/pyvenv.cfg\n\t{alembic_revision_command}" in makefile
+    )
+    assert f"revision: .venv/pyvenv.cfg\n\t{alembic_revision_command}" in makefile
+    assert "No migrations configured" not in makefile
     session = (config.target_dir / "app" / "db" / "session.py").read_text(encoding="utf-8")
     alembic_env = (config.target_dir / "alembic" / "env.py").read_text(encoding="utf-8")
     assert "from dotenv import load_dotenv" in session
@@ -196,6 +204,15 @@ def test_render_builtin_django_drf_project(tmp_path: Path):
     assert "POSTGRES_HOST=localhost" in env
     assert "POSTGRES_PORT=5432" in env
     assert "$(VENV_PYTHON) manage.py migrate" in makefile
+    assert (
+        "migrations: .venv/pyvenv.cfg\n\t$(VENV_PYTHON) manage.py makemigrations"
+        in makefile
+    )
+    assert (
+        "makemigrations: .venv/pyvenv.cfg\n\t$(VENV_PYTHON) manage.py makemigrations"
+        in makefile
+    )
+    assert "No migrations configured" not in makefile
     base_model = (config.target_dir / "core" / "models.py").read_text(encoding="utf-8")
     assert "class BaseModel(models.Model):" in base_model
     assert "models.UUIDField" in base_model
@@ -286,6 +303,10 @@ def test_render_builtin_django_project_without_database(tmp_path: Path):
     assert "DATABASE_URL=" not in env
     assert "POSTGRES_" not in env
     assert "migrate:" not in makefile
+    assert "migrations:" not in makefile
     assert "makemigrations:" not in makefile
+    assert "revision:" not in makefile
+    assert "No migrations configured" not in makefile
     assert "make migrate" not in readme
+    assert "make migrations" not in readme
     assert "db:" not in compose

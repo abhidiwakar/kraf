@@ -92,7 +92,7 @@ def _write_makefile(target_dir: Path, packs: list[PackWithPath]) -> int:
     for pack, _path in packs:
         targets.update(pack.make_targets)
     if _uses_no_database(packs):
-        for target in ("migrate", "makemigrations", "revision"):
+        for target in ("migrate", "migrations", "makemigrations", "revision"):
             targets.pop(target, None)
 
     phony_targets = " ".join(["venv", *targets])

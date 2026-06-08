@@ -40,8 +40,12 @@ make run
 make test
 make lint
 make format
+make migrations
 make migrate
 ```
+
+Migration commands are generated only for database-backed projects. `make migrations`
+creates a migration, while `make migrate` applies migrations.
 
 ## Development
 

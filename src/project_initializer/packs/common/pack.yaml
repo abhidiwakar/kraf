@@ -4,5 +4,3 @@ files:
     destination: README.md
   - source: .gitignore.j2
     destination: .gitignore
-make_targets:
-  migrate: "python -c \"print('No migrations configured')\""

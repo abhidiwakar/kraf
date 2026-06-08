@@ -8,6 +8,7 @@ files:
     destination: alembic/env.py
 make_targets:
   migrate: "$(VENV_PYTHON) -m alembic upgrade head"
+  migrations: "$(VENV_PYTHON) -m alembic revision --autogenerate -m \"change\""
   revision: "$(VENV_PYTHON) -m alembic revision --autogenerate -m \"change\""
 requires:
   - orm_sqlalchemy
